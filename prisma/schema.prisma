@@ -1,0 +1,199 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Quotations {
+  quotationsId        Int       @id @default(autoincrement())
+  status              String
+  startDate           DateTime
+  estimatedDeadline   DateTime
+  completionDate      DateTime?
+  estimatedTotalHours Int
+  actualTotalHours    Int
+}
+
+model PendingProject {
+  projectId Int      @id @default(autoincrement())
+  startSate DateTime
+  deadline  DateTime
+  status    String
+}
+
+model Notification {
+  id_notification Int      @id @default(autoincrement())
+  type            String
+  content         String
+  date            DateTime
+}
+
+model Reminder {
+  reminderId      Int      @id @default(autoincrement())
+  taskDescription String
+  deadline        DateTime
+}
+
+
+// Tablas relacionadas con Quotation Generation
+
+model Client {
+  clientId       Int @id @default(autoincrement())
+  name           String
+  contactDetails String
+  companyDetails String
+}
+
+model Project {
+  projectId                 Int       @id @default(autoincrement())
+  clientId                  Int       // Este sería el FK de client
+  description               String
+  objectives                String
+  technicalRequirements     String
+  platformsAndTechnologies  String
+  
+  // relaciones 
+  quotationDetail QuotationDetail[]
+
+}
+
+model QuotationTemplate {
+  templateId    Int       @id @default(autoincrement())
+  templateName  String
+  description   String
+  content       String
+
+  // relaciones
+  quotationDetail QuotationDetail[]
+  templateCustomization TemplateCustomization[]
+
+}
+
+model QuotationDetail {
+  quotationId         Int       @id @default(autoincrement())
+  projectId           Int       @unique // Este sería el FK de project
+  templateId          Int       // Este sería el FK de quotationTemplates
+  dateCreated         DateTime
+  status              String
+  previewDetails      String
+  adjustmentDetails   String
+  submissionDetails   String
+
+  project Project @relation(fields: [projectId], references: [projectId])
+  quotationTemplate QuotationTemplate @relation(fields: [templateId], references: [templateId])
+
+}
+
+// Tablas relacionadas con Centralization of Information
+
+model ProjectDatabase {
+  projectId          Int       @id @default(autoincrement())
+  projectDetails     String
+  clientInformation  String
+  quotationHistory   String
+
+  // relaciones
+  documentIntegration DocumentIntegration[]
+  automatedNotification AutomatedNotification[]
+  feedbackForm FeedbackForm[]
+  satisfactionSurvey SatisfactionSurvey[]
+
+}
+
+model DocumentIntegration {
+  documentId    Int       @id @default(autoincrement())
+  projectId     Int       // Este sería el FK de projectDatabase
+  documentName  String
+  fileLocation  String
+  accessDetails String
+
+  projectDatabase ProjectDatabase @relation(fields: [projectId], references: [projectId])
+}
+
+//  Tablas relacionadas con Real-time Tracking and Updates
+
+model TrackingPanel {
+  trackingId      Int       @id @default(autoincrement())
+  projectStatus   String
+  progressDetails String
+  taskDetails     String
+}
+
+model AutomatedNotification {
+  notificationId   Int       @id @default(autoincrement())
+  projectId        Int       // Este sería el FK de projectDatabase
+  notificationType String
+  content          String
+  date             DateTime
+
+  projectDatabase ProjectDatabase @relation(fields: [projectId], references: [projectId])
+}
+
+// Tablas relacionadas con Feedback and Continuous Improvement
+
+model FeedbackForm {
+  feedbackId      Int       @id @default(autoincrement())
+  projectId       Int       // Este sería el FK de projectDatabase
+  feedbackContent Json
+  rating          Int      
+  date            DateTime
+
+  projectDatabase ProjectDatabase @relation(fields: [projectId], references: [projectId])
+}
+
+model SatisfactionSurvey {
+  surveyId        Int       @id @default(autoincrement())
+  projectId       Int       // Este sería el FK de projectDatabase
+  surveyContent   String
+  resultsAnalysis String
+
+  projectDatabase ProjectDatabase @relation(fields: [projectId], references: [projectId])
+}
+
+// Tablas relacionadas con Configuration and Customization
+
+model UserAdministration {
+  userId      Int       @id @default(autoincrement())
+  name        String
+  role        String
+  permissions String
+
+  // relaciones
+  profileManagement ProfileManagement[]
+  securityAndAuthentication SecurityAndAuthentication[]
+
+}
+
+model ProfileManagement {
+  profileId         Int       @id @default(autoincrement())
+  userId            Int       // Este sería el FK de userAdministration
+  profileDetails    String
+
+  userAdministration UserAdministration @relation(fields: [userId], references: [userId])
+}
+
+model SecurityAndAuthentication {
+  securityId              Int       @id @default(autoincrement())
+  userId                  Int       // Este sería el FK de userAdministration
+  passwordConfiguration   String
+  twoFactorAuthentication Boolean
+
+  userAdministration UserAdministration @relation(fields: [userId], references: [userId])
+}
+
+model TemplateCustomization {
+  customizationId Int       @id @default(autoincrement())
+  templateId      Int       // Este sería el FK de quotationTemplate
+  customSettings  String
+
+  quotationTemplate QuotationTemplate @relation(fields: [templateId], references: [templateId])
+}
